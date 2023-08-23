@@ -1,14 +1,11 @@
 # Android
-SDKPREFIX=$(HOME)/Android/Sdk
-NDKPREFIX=$(SDKPREFIX)/ndk/21.1.6352462/toolchains/llvm/prebuilt/linux-x86_64/bin
-JAVA_HOME=/usr
 
 PTHREAD=-pthread
-AR=$(NDKPREFIX)/arm-linux-androideabi-ar
-AS=$(NDKPREFIX)/arm-linux-androideabi-as
-RANLIB=$(NDKPREFIX)/arm-linux-androideabi-ranlib
-STRIP=$(NDKPREFIX)/arm-linux-androideabi-strip
-CC=$(NDKPREFIX)/armv7a-linux-androideabi21-clang
+AR=$(NDKPREFIX)/llvm-ar
+RANLIB=$(NDKPREFIX)/llvm-ranlib
+STRIP=$(NDKPREFIX)/llvm-strip
+CC=$(NDKPREFIX)/armv7a-linux-androideabi$(API)-clang
+AS=$CC 
 CFLAGS=-Wall -Wno-missing-braces -ggdb -I$(ROOT) -I$(ROOT)/include -I$(ROOT)/kern -c -Dmain=dt_main -fPIC
 O=o
 OS=posix
