@@ -1,38 +1,49 @@
 # Android
-SDKPREFIX=$(HOME)/Android/Sdk
-JAVA_HOME=/usr
+export ANDROID_HOME?=$(HOME)/Android/Sdk
+export BUILDTOOLSVER?=34.0.0
+export API?=33
+export NDK_VERSION?=25.2.9519653
+export JAVA_HOME?=/usr
+export NDKPREFIX?=$(ANDROID_HOME)/ndk/$(NDK_VERSION)/toolchains/llvm/prebuilt/linux-x86_64/bin
+
 OBJS=lib/arm64-v8a/libdrawterm.so lib/armeabi-v7a/libdrawterm.so lib/x86/libdrawterm.so lib/x86_64/libdrawterm.so
 
 all: drawterm.apk
 
 clean:
-	rm -f *.apk lib/*/*.so
+	rm -f *.apk lib/*/*.so drawterm.keystore gui-android/*/*.o gui-android/*/*.a gui-android/bin/* gui-android/gen/org/echoline/drawterm/* gui-android/obj/org/echoline/drawterm/*
+	CONF=android-arm64 make clean;
 
 lib/arm64-v8a/libdrawterm.so:
+	rm -f gui-android/cpp/*.o gui-android/*.a
 	CONF=android-arm64 make -j5;
 	CONF=android-arm64 make clean;
 
 lib/armeabi-v7a/libdrawterm.so:
+	rm -f gui-android/cpp/*.o gui-android/*.a
 	CONF=android-arm make -j5;
 	CONF=android-arm make clean;
 
 lib/x86/libdrawterm.so:
+	rm -f gui-android/cpp/*.o gui-android/*.a
 	CONF=android-386 make -j5;
 	CONF=android-386 make clean;
 
 lib/x86_64/libdrawterm.so:
+	rm -f gui-android/cpp/*.o gui-android/*.a
 	CONF=android-amd64 make -j5;
 	CONF=android-amd64 make clean;
 
 drawterm.apk: drawterm-signed.apk
-	$(SDKPREFIX)/build-tools/30.0.3/zipalign -v -f 4 $< $@
+	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/zipalign -v -f 4 $< $@
 
 drawterm-signed.apk: drawterm-unsigned.apk drawterm.keystore
 	$(JAVA_HOME)/bin/jarsigner -verbose -keystore ./drawterm.keystore -storepass glendarocks -keypass glendarocks -signedjar $@ $< drawtermKey
 
 drawterm-unsigned.apk: $(OBJS)
-	$(SDKPREFIX)/build-tools/30.0.3/aapt package -v -f -M gui-android/AndroidManifest.xml -S gui-android/res -I $(SDKPREFIX)/platforms/android-21/android.jar -F $@ gui-android/bin
-	$(SDKPREFIX)/build-tools/30.0.3/aapt add $@ $(OBJS)
+	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/aapt package -v -f -M gui-android/AndroidManifest.xml -S gui-android/res -I $(ANDROID_HOME)/platforms/android-$(API)/android.jar -F $@ gui-android/bin
+	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/aapt add $@ $(OBJS)
+
 
 drawterm.keystore:
 	$(JAVA_HOME)/bin/keytool -genkeypair -validity 1000 -dname "CN=9front,O=Android,C=US" -keystore $@ -storepass glendarocks -keypass glendarocks -alias drawtermKey -keyalg RSA -v
