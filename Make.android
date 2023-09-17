@@ -1,18 +1,28 @@
 # Android
 export ANDROID_HOME?=$(HOME)/Android/Sdk
 export BUILDTOOLSVER?=34.0.0
-export API?=33
-export NDK_VERSION?=25.2.9519653
+export API?=34
+export NDK_VERSION?=android-ndk-r26-beta2
 export JAVA_HOME?=/usr
 export NDKPREFIX?=$(ANDROID_HOME)/ndk/$(NDK_VERSION)/toolchains/llvm/prebuilt/linux-x86_64/bin
+export NDK?=$(ANDROID_HOME)/ndk/$(NDK_VERSION)
+export BUILD_TOOLS?=$(ANDROID_HOME)/$(BUILDTOOLSVER)
+export PLATFORM?=$(ANDROID_HOME)/platforms/android-$API
 
-OBJS=lib/arm64-v8a/libdrawterm.so lib/armeabi-v7a/libdrawterm.so lib/x86/libdrawterm.so lib/x86_64/libdrawterm.so
+
+OBJS=\
+	lib/arm64-v8a/libdrawterm.so\
+	lib/armeabi-v7a/libdrawterm.so\
+	lib/x86/libdrawterm.so\
+	lib/x86_64/libdrawterm.so\
 
 all: drawterm.apk
 
 clean:
-	rm -f *.apk lib/*/*.so drawterm.keystore gui-android/*/*.o gui-android/*/*.a gui-android/bin/* gui-android/gen/org/echoline/drawterm/* gui-android/obj/org/echoline/drawterm/*
+	rm -f *.apk lib/*/*.so
 	CONF=android-arm64 make clean;
+	cd gui-android && CONF=android-arm64 make clean;
+	cd ..
 
 lib/arm64-v8a/libdrawterm.so:
 	rm -f gui-android/cpp/*.o gui-android/*.a
@@ -34,11 +44,9 @@ lib/x86_64/libdrawterm.so:
 	CONF=android-amd64 make -j5;
 	CONF=android-amd64 make clean;
 
-drawterm.apk: drawterm-signed.apk
+drawterm.apk: drawterm-unsigned.apk drawterm.keystore
 	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/zipalign -v -f 4 $< $@
-
-drawterm-signed.apk: drawterm-unsigned.apk drawterm.keystore
-	$(JAVA_HOME)/bin/jarsigner -verbose -keystore ./drawterm.keystore -storepass glendarocks -keypass glendarocks -signedjar $@ $< drawtermKey
+	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/apksigner sign -verbose --ks ./drawterm.keystore --ks-pass pass:glendarocks --key-pass pass:glendarocks $@
 
 drawterm-unsigned.apk: $(OBJS)
 	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/aapt package -v -f -M gui-android/AndroidManifest.xml -S gui-android/res -I $(ANDROID_HOME)/platforms/android-$(API)/android.jar -F $@ gui-android/bin
