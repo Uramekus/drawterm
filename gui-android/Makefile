@@ -15,7 +15,7 @@ $(LIB): $(OFILES)
 gen/org/echoline/drawterm/R.java: $(shell find res/ -type f)
 	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/aapt package -f -m -M AndroidManifest.xml -I $(ANDROID_HOME)/platforms/android-$(API)/android.jar -S res/ -J gen
 
-bin/classes.dex: obj/org/echoline/drawterm/MainActivity.class obj/org/echoline/drawterm/DrawTermThread.class obj/org/echoline/drawterm/MySurfaceView.class
+bin/classes.dex: obj/org/echoline/drawterm/MainActivity.class obj/org/echoline/drawterm/DrawTermThread.class obj/org/echoline/drawterm/MySurfaceView.class obj/org/echoline/drawterm/DrawtermApplication.class
 	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/d8 --output bin/ obj/org/echoline/drawterm/*.class --lib $(ANDROID_HOME)/platforms/android-$(API)/android.jar
 
 obj/org/echoline/drawterm/%.class: java/org/echoline/drawterm/%.java

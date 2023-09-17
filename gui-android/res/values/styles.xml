@@ -1,8 +1,5 @@
 <resources>
-
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="android:Theme.NoTitleBar">
-        <!-- Customize your theme here. -->
+    <style name="AppTheme" parent="android:Theme.DeviceDefault">
+        <item name="android:windowNoTitle">true</item>
     </style>
-
 </resources>
