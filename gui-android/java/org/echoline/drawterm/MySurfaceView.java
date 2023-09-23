@@ -22,19 +22,14 @@ import java.security.spec.ECField;
 public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 	private int screenWidth, screenHeight;
 	private MainActivity mainActivity;
-	private float ws, hs;
 
-	public MySurfaceView(Context context, int w, int h, float ws, float hs) {
+	public MySurfaceView(Context context, int w, int h) {
 		super(context);
-		screenHeight = h;
-		screenWidth = w;
-		this.ws = ws;
-		this.hs = hs;
+		this.screenWidth = w;
+		this.screenHeight = h;
 		mainActivity = (MainActivity)context;
 		mainActivity.setWidth(screenWidth);
 		mainActivity.setHeight(screenHeight);
-		mainActivity.setWidthScale(ws);
-		mainActivity.setHeightScale(hs);
 		setWillNotDraw(true);
 
 		getHolder().addCallback(this);

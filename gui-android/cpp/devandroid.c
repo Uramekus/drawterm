@@ -33,7 +33,7 @@ static void androidinit(void);
 static void
 androidinit(void)
 {
-	sensorManager = ASensorManager_getInstance();
+	sensorManager = ASensorManager_getInstanceForPackage("com-9front-drawterm");
 
 	Ncameras = num_cameras();
 }
