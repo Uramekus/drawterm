@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
+import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Environment;
@@ -11,7 +12,11 @@ import android.os.Environment;
 import android.app.Activity;
 
 import android.app.Notification;
+import android.app.NotificationChannel; 
 import android.app.NotificationManager;
+
+import android.content.Intent;
+import android.app.PendingIntent;
 
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -21,6 +26,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.view.WindowMetrics;
 import android.view.Surface;
 import android.view.inputmethod.InputMethodManager;
 import android.view.KeyEvent;
@@ -54,6 +60,7 @@ import java.util.ArrayList;
 public class MainActivity extends Activity {
 	private Map<String, ?> map;
 	private MainActivity mainActivity;
+	String applicationId,sessionId;
 	private boolean dtrunning = false;
 	private DrawTermThread dthread;
 	private int notificationId;
@@ -65,12 +72,18 @@ public class MainActivity extends Activity {
 	}
 
 	public void showNotification(String text) {
-		Notification.Builder builder = new Notification.Builder(this)
-			.setDefaults(Notification.DEFAULT_SOUND)
+		Intent i = new Intent(this, MainActivity.class);
+		i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		PendingIntent pi = PendingIntent.getActivity(this,
+        0 /* Request code */,
+        i,
+        PendingIntent.FLAG_ONE_SHOT);
+
+		Notification.Builder builder = new Notification.Builder(MainActivity.this, "0")
 			.setSmallIcon(R.drawable.ic_small)
 			.setContentText(text)
-			.setStyle(new Notification.BigTextStyle().bigText(text))
-			.setPriority(Notification.PRIORITY_DEFAULT);
+			.setStyle(new Notification.BigTextStyle().bigText(text));
+
 
 		((NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE)).notify(notificationId, builder.build());
 		notificationId++;
@@ -86,7 +99,7 @@ public class MainActivity extends Activity {
 	}
 
 	public void takePicture(int id) {
-		try {
+try {
 			HandlerThread mBackgroundThread = new HandlerThread("Camera Background");
 			mBackgroundThread.start();
 			Handler mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
@@ -194,15 +207,17 @@ public class MainActivity extends Activity {
 	}
 
 	public void runDrawterm(String []args, String pass) {
-		Resources res = getResources();
-		DisplayMetrics dm = res.getDisplayMetrics();
+		//window dimensions, Activity.getResources().getConfiguration().screenWidth
+		//https://developer.android.com/topic/arc/window-management
+		// this is fucked up ^
 
-		int wp = dm.widthPixels;
-		int hp = dm.heightPixels;
+		WindowMetrics windowMetrics = getWindowManager().getCurrentWindowMetrics();
+		int ww = windowMetrics.getBounds().width();
+		int wh = windowMetrics.getBounds().height();
 
 		setContentView(R.layout.drawterm_main);
 
-		Button kbutton = (Button)findViewById(R.id.keyboardToggle);
+		Button kbutton = findViewById(R.id.keyboardToggle);
 		kbutton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(final View view) {
@@ -211,30 +226,7 @@ public class MainActivity extends Activity {
 			}
 		});
 
-		int rid = res.getIdentifier("navigation_bar_height", "dimen", "android");
-		if (rid > 0) {
-			hp -= res.getDimensionPixelSize(rid);
-		}
-		LinearLayout ll = (LinearLayout)findViewById(R.id.dtButtons);
-		hp -= ll.getHeight();
-
-		int w = (int)(wp * (160.0/dm.xdpi));
-		int h = (int)(hp * (160.0/dm.ydpi));
-		float ws = (float)wp/w;
-		float hs = (float)hp/h;
-		// only scale up
-		if (ws < 1) {
-			ws = 1;
-			w = wp;
-		}
-		if (hs < 1) {
-			hs = 1;
-			h = hp;
-		}
-
-		MySurfaceView mView = new MySurfaceView(mainActivity, w, h, ws, hs);
-		mView.getHolder().setFixedSize(w, h);
-
+		MySurfaceView mView = new MySurfaceView(mainActivity, ww, wh);
 		LinearLayout l = (LinearLayout)findViewById(R.id.dlayout);
 		l.addView(mView, 1, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
 
@@ -279,9 +271,8 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
+		
 		mainActivity = this;
 		setObject();
 		setContentView(R.layout.activity_main);
@@ -390,14 +381,9 @@ public class MainActivity extends Activity {
 	}
 
 	@Override
-	public void onBackPressed()
-	{
-	}
-
-	@Override
 	public void onDestroy()
 	{
-		setDTSurface(null);
+				setDTSurface(null);
 		dtrunning = false;
 		exitDT();
 		super.onDestroy();
@@ -425,9 +411,8 @@ public class MainActivity extends Activity {
 	public native void setPass(String arg);
 	public native void setWidth(int arg);
 	public native void setHeight(int arg);
-	public native void setWidthScale(float arg);
-	public native void setHeightScale(float arg);
 	public native void setDTSurface(Surface surface);
+	public native void resizeDT();
 	public native void setMouse(int[] args);
 	public native void setObject();
 	public native void keyDown(int c);

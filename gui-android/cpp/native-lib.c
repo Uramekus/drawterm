@@ -2,14 +2,19 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/log.h>
+
 #include "u.h"
 #include "lib.h"
 #include "dat.h"
 #include "fns.h"
 #include "error.h"
+
 #include <draw.h>
-#include <string.h>
+#include <memdraw.h>
 #include <keyboard.h>
+#include <cursor.h>
+#include <string.h>
+#include "screen.h"
 
 void absmousetrack(int, int, int, ulong);
 ulong ticks(void);
@@ -18,9 +23,8 @@ int screenWidth;
 int screenHeight;
 Point mousept = {0, 0};
 int buttons = 0;
-float ws = 1;
-float hs = 1;
 extern char *snarfbuf;
+extern Memimage *gscreen;
 int mPaused = 0;
 ANativeWindow *window = NULL;
 jobject mainActivityObj;
@@ -79,19 +83,22 @@ Java_org_echoline_drawterm_MainActivity_setHeight(
 }
 
 JNIEXPORT void JNICALL
-Java_org_echoline_drawterm_MainActivity_setWidthScale(
+Java_org_echoline_drawterm_MainActivity_resizeDT(
         JNIEnv *env,
-        jobject obj,
-        jfloat s) {
-    ws = s;
-}
+        jobject obj) {
+    Rectangle r = Rect(0, 0, screenWidth, screenHeight);
 
-JNIEXPORT void JNICALL
-Java_org_echoline_drawterm_MainActivity_setHeightScale(
-        JNIEnv *env,
-        jobject obj,
-        jfloat s) {
-    hs = s;
+    screensize(r, XRGB32);
+
+    if(gscreen == nil){
+        __android_log_print(ANDROID_LOG_ERROR , "drawterm", "screensize failed!\n");
+    }
+    __android_log_print(ANDROID_LOG_WARN, "drawterm", "performed a screensize to (%d,%d)!\n", screenWidth, screenHeight);
+    gscreen->clipr = r;
+    qlock(&drawlock);
+	flushmemscreen(r);
+	qunlock(&drawlock);
+    return;
 }
 
 JNIEXPORT jint JNICALL
@@ -107,7 +114,7 @@ Java_org_echoline_drawterm_MainActivity_dtmain(
         args[i] = strdup((char*)(*env)->GetStringUTFChars(env, (jstring)str, 0));
     }
     args[(*env)->GetArrayLength(env, argv)] = NULL;
-
+    
     ret = dt_main(i, args);
 
     for (i = 0; args[i] != NULL; i++) {
@@ -128,8 +135,9 @@ Java_org_echoline_drawterm_MainActivity_setMouse(
     if ((*env)->GetArrayLength(env, args) < 3)
         return;
     data = (*env)->GetIntArrayElements(env, args, &isCopy);
-    mousept.x = (int)(data[0] / ws);
-    mousept.y = (int)(data[1] / hs);
+    //TODO: fix mouse coords.
+    mousept.x = (int)(data[0]);
+    mousept.y = (int)(data[1]);
     buttons = data[2];
     (*env)->ReleaseIntArrayElements(env, args, data, 0);
     absmousetrack(mousept.x, mousept.y, buttons, ticks());
@@ -155,6 +163,7 @@ JNIEXPORT void JNICALL
 Java_org_echoline_drawterm_MainActivity_exitDT(
 	JNIEnv* jenv,
 	jobject obj) {
+    (*jvm)->DetachCurrentThread(jvm);
     exit(0);
 }
 
