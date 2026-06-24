@@ -2,7 +2,7 @@
 export ANDROID_HOME?=$(HOME)/Android/Sdk
 export BUILDTOOLSVER?=34.0.0
 export API?=34
-export NDK_VERSION?=android-ndk-r26-beta2
+export NDK_VERSION?=android-ndk-r26d
 export JAVA_HOME?=/usr
 export NDKPREFIX?=$(ANDROID_HOME)/ndk/$(NDK_VERSION)/toolchains/llvm/prebuilt/linux-x86_64/bin
 export NDK?=$(ANDROID_HOME)/ndk/$(NDK_VERSION)

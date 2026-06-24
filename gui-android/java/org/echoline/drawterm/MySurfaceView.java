@@ -16,9 +16,6 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.security.spec.ECField;
 
-/**
- * Created by eli on 12/3/17.
- */
 public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 	private int screenWidth, screenHeight;
 	private MainActivity mainActivity;
@@ -49,12 +46,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 								(right.isChecked()? 4: 0) |
 								(up.isChecked()? 8: 0) |
 								(down.isChecked()? 16: 0);
-				if (event.getAction() == MotionEvent.ACTION_DOWN) {
-					mouse[0] = Math.round(event.getX());
-					mouse[1] = Math.round(event.getY());
-					mouse[2] = buttons;
-					mainActivity.setMouse(mouse);
-				} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+				if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
 					mouse[0] = Math.round(event.getX());
 					mouse[1] = Math.round(event.getY());
 					mouse[2] = buttons;
@@ -64,8 +56,40 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 					mouse[1] = Math.round(event.getY());
 					mouse[2] = 0;
 					mainActivity.setMouse(mouse);
-				}
+				} else {return false;}
 				return true;
+			}
+		});
+
+		setOnGenericMotionListener(new View.OnGenericMotionListener() {
+			private int[] mouse = new int[3];
+
+			@Override
+			public boolean onGenericMotion(View v,MotionEvent event) {
+			    int pointerCount = event.getPointerCount();
+				//Log.e("drawmeme ","merda");
+				int foda = event.getAction() & event.ACTION_MASK;
+			    switch (foda) {
+			        case MotionEvent.BUTTON_SECONDARY:
+			            Log.e("Mouse: ", "Right Click");
+			            return true;
+			        case MotionEvent.BUTTON_PRIMARY:
+			            Log.e("Mouse: ", "Left Click");
+			            return true;
+					case MotionEvent.BUTTON_TERTIARY:
+						Log.e("Mouse: ", "Middle Click");
+						return true;
+			        case MotionEvent.ACTION_HOVER_MOVE:
+			            if (pointerCount == 1) {
+			                Log.e("Mouse: ", "Move");
+			            } else if (pointerCount == 2) {
+			                Log.e("Mouse: ", "Scroll");
+			            }
+			            return true;
+					default:
+						Log.e("cruzes", event.actionToString(foda));
+			    }
+			    return false;
 			}
 		});
 	}
