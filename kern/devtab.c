@@ -20,6 +20,10 @@ extern Dev kbddevtab;
 extern Dev cmddevtab;
 extern Dev envdevtab;
 
+#ifdef __ANDROID__
+extern Dev androiddevtab;
+#endif
+
 Dev *devtab[] = {
 	&rootdevtab,
 	&consdevtab,
@@ -36,6 +40,9 @@ Dev *devtab[] = {
 	&kbddevtab,
 	&cmddevtab,
 	&envdevtab,
+#ifdef __ANDROID__
+	&androiddevtab,
+#endif
 	0
 };
 

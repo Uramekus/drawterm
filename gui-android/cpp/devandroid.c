@@ -169,7 +169,7 @@ androidread(Chan *c, void *v, long n, vlong off)
 				return 0;
 			}
 			l = 0;
-			if (ALooper_pollAll(1000, NULL, NULL, NULL) == 1) {
+			if (ALooper_pollOnce(1000, NULL, NULL, NULL) == 1) {
 				if (ASensorEventQueue_getEvents(queue, &data, 1)) {
 					l = snprint(a, n, "%11f %11f %11f\n", data.vector.x, data.vector.y, data.vector.z);
 				}
@@ -192,7 +192,7 @@ androidread(Chan *c, void *v, long n, vlong off)
 				return 0;
 			}
 			l = 0;
-			if (ALooper_pollAll(1000, NULL, NULL, NULL) == 1) {
+			if (ALooper_pollOnce(1000, NULL, NULL, NULL) == 1) {
 				if (ASensorEventQueue_getEvents(queue, &data, 1)) {
 					l = snprint(a, n, "%11f %11f %11f\n", data.vector.x, data.vector.y, data.vector.z);
 				}
