@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.widget.FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.echoline.drawterm.MainActivity"
+    tools:showIn="@layout/activity_main">
+    
+    <FrameLayout
+        android:layout_width="480dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
+        
+        <ListView
+            android:id="@+id/servers"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="?android:attr/colorBackground"
+            android:elevation="4dp">
+        </ListView>
+        
+    </FrameLayout>
+</android.widget.FrameLayout>
