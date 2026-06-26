@@ -78,6 +78,7 @@ screenwin(void)
 }
 
 static struct {
+	Lock l;
 	Rectangle	r;
 	Rendez		z;
 	int		f;
@@ -92,25 +93,31 @@ isresized(void *arg)
 static void
 resizeproc(void *arg)
 {
+	Rectangle r;
 	USED(arg);
 	for(;;){
 		sleep(&resize.z, isresized, nil);
-		qlock(&drawlock);
+		
+		lock(&resize.l);
 		resize.f = 0;
+		r = resize.r;
+		unlock(&resize.l);
+
+		qlock(&drawlock);
 		if(gscreen == nil
-		|| badrect(resize.r)
-		|| eqrect(resize.r, gscreen->clipr)){
+		|| badrect(r)
+		|| eqrect(r, gscreen->clipr)){
 			qunlock(&drawlock);
 			continue;
 		}
-		screensize(resize.r, gscreen->chan);
+		screensize(r, gscreen->chan);
 		if(gscreen == nil
-		|| rectclip(&resize.r, gscreen->r) == 0
-		|| eqrect(resize.r, gscreen->clipr)){
+		|| rectclip(&r, gscreen->r) == 0
+		|| eqrect(r, gscreen->clipr)){
 			qunlock(&drawlock);
 			continue;
 		}
-		gscreen->clipr = resize.r;
+		gscreen->clipr = r;
 
 		screenwin();
 		deletescreenimage();
@@ -123,11 +130,11 @@ resizeproc(void *arg)
 void
 screenresize(Rectangle r)
 {
-	qlock(&drawlock);
+	lock(&resize.l);
 	resize.r = r;
 	resize.f = 1;
 	wakeup(&resize.z);
-	qunlock(&drawlock);
+	unlock(&resize.l);
 }
 
 void

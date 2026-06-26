@@ -128,7 +128,7 @@ flushmemscreen(Rectangle r)
 	int x, y, o, b;
 	ARect bounds;
 
-	if (window == NULL)
+	if (window == NULL || gscreen == NULL || gscreen->data == NULL)
 		return;
 
 	memset(&buffer, 0, sizeof(buffer));
@@ -165,9 +165,24 @@ flushmemscreen(Rectangle r)
 	return;
 }
 
+extern void (*_sysfatal)(char *fmt, va_list arg);
+extern void (*os_panic_hook)(char *buf);
+
+static void
+android_sysfatal(char *fmt, va_list arg)
+{
+	char buf[1024];
+	vseprint(buf, buf+sizeof(buf), fmt, arg);
+	__android_log_print(ANDROID_LOG_FATAL, "drawterm", "sysfatal: %s", buf);
+	show_notification(buf);
+	exit(1);
+}
+
 void
 screeninit(void)
 {
+	_sysfatal = android_sysfatal;
+	os_panic_hook = show_notification;
 	Rectangle r = Rect(0,0,screenWidth,screenHeight);
 	memimageinit();
 	screensize(r, XRGB32);
@@ -205,15 +220,63 @@ attachscreen(Rectangle *r, ulong *chan, int *depth, int *width, int *softscreen)
 	*chan = gscreen->chan;
 	*width = gscreen->width;
 	*softscreen = 1;
-
 	gscreen->data->ref++;
 	return gscreen->data;
 }
 
+extern jobject mainActivityObj;
+extern JavaVM *jvm;
+
 void
 setcursor(void)
 {
-	return;
+	JNIEnv *env;
+	if (jvm == NULL || mainActivityObj == NULL) return;
+	if ((*jvm)->GetEnv(jvm, (void **)&env, JNI_VERSION_1_6) != JNI_OK) {
+		if ((*jvm)->AttachCurrentThread(jvm, &env, NULL) != JNI_OK) {
+			return;
+		}
+	}
+
+	int pixels[256];
+	int i, j, k = 0;
+	for (i = 0; i < 16; i++) {
+		uchar s1 = cursor.set[2*i];
+		uchar s2 = cursor.set[2*i + 1];
+		uchar c1 = cursor.clr[2*i];
+		uchar c2 = cursor.clr[2*i + 1];
+
+		for (j = 0; j < 8; j++) {
+			int s = (s1 >> (7 - j)) & 1;
+			int c = (c1 >> (7 - j)) & 1;
+			int argb = 0;
+			if (s) argb = 0xFF000000;
+			else if (c) argb = 0xFFFFFFFF;
+			pixels[k++] = argb;
+		}
+		for (j = 0; j < 8; j++) {
+			int s = (s2 >> (7 - j)) & 1;
+			int c = (c2 >> (7 - j)) & 1;
+			int argb = 0;
+			if (s) argb = 0xFF000000;
+			else if (c) argb = 0xFFFFFFFF;
+			pixels[k++] = argb;
+		}
+	}
+
+	jintArray jPixels = (*env)->NewIntArray(env, 256);
+	if (jPixels == NULL) return;
+	(*env)->SetIntArrayRegion(env, jPixels, 0, 256, (jint*)pixels);
+
+	jclass cls = (*env)->GetObjectClass(env, mainActivityObj);
+	jmethodID mid = (*env)->GetMethodID(env, cls, "setCursor", "([III)V");
+	if (mid) {
+		int hotX = cursor.offset.x < 0 ? -cursor.offset.x : cursor.offset.x;
+		int hotY = cursor.offset.y < 0 ? -cursor.offset.y : cursor.offset.y;
+		(*env)->CallVoidMethod(env, mainActivityObj, mid, jPixels, hotX, hotY);
+	}
+	(*env)->DeleteLocalRef(env, jPixels);
+	(*env)->DeleteLocalRef(env, cls);
 }
 
 void

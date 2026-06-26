@@ -88,17 +88,17 @@ Java_org_echoline_drawterm_MainActivity_resizeDT(
         jobject obj) {
     Rectangle r = Rect(0, 0, screenWidth, screenHeight);
 
-    screensize(r, XRGB32);
+    if (window != NULL) {
+        ANativeWindow_setBuffersGeometry(window, screenWidth, screenHeight,
+            AHARDWAREBUFFER_FORMAT_R8G8B8X8_UNORM);
+    }
 
     if(gscreen == nil){
-        __android_log_print(ANDROID_LOG_ERROR , "drawterm", "screensize failed!\n");
+        __android_log_print(ANDROID_LOG_ERROR , "drawterm", "gscreen is nil during resize!\n");
+        return;
     }
-    __android_log_print(ANDROID_LOG_WARN, "drawterm", "performed a screensize to (%d,%d)!\n", screenWidth, screenHeight);
-    gscreen->clipr = r;
-    qlock(&drawlock);
-	flushmemscreen(r);
-	qunlock(&drawlock);
-    return;
+    __android_log_print(ANDROID_LOG_WARN, "drawterm", "performed a screenresize to (%d,%d)!\n", screenWidth, screenHeight);
+    screenresize(r);
 }
 
 JNIEXPORT jint JNICALL
