@@ -10,9 +10,9 @@ CFLAGS=-Wall -Wno-missing-braces -ggdb -I$(ROOT) -I$(ROOT)/include -I$(ROOT)/ker
 O=o
 OS=posix
 GUI=android
-LDADD=-ggdb -lm -shared -llog -landroid
+LDADD=-ggdb -lm -shared -llog -landroid -laaudio
 LDFLAGS=$(PTHREAD)
 TARG=lib/x86/libdrawterm.so
-AUDIO=none
+AUDIO=aaudio
 
 all: default
