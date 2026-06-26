@@ -392,6 +392,41 @@ public class MainActivity extends Activity {
 		});
 	}
 
+	private void checkAllPermissions() {
+		android.content.SharedPreferences prefs = getSharedPreferences("DrawtermPrefs", 0);
+		if (prefs.getBoolean("askedPermissions", false)) return;
+		prefs.edit().putBoolean("askedPermissions", true).commit();
+		
+		if (android.os.Build.VERSION.SDK_INT >= 23) {
+			java.util.List<String> perms = new java.util.ArrayList<String>();
+			if (checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED)
+				perms.add(android.Manifest.permission.CAMERA);
+			if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED)
+				perms.add(android.Manifest.permission.RECORD_AUDIO);
+			if (android.os.Build.VERSION.SDK_INT < 30 && checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED)
+				perms.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+				
+			if (!perms.isEmpty()) {
+				requestPermissions(perms.toArray(new String[0]), 1);
+			}
+		}
+		
+		if (android.os.Build.VERSION.SDK_INT >= 30) {
+			if (!android.os.Environment.isExternalStorageManager()) {
+				try {
+					android.content.Intent intent = new android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+					intent.addCategory("android.intent.category.DEFAULT");
+					intent.setData(android.net.Uri.parse(String.format("package:%s", getApplicationContext().getPackageName())));
+					startActivity(intent);
+				} catch (Exception e) {
+					android.content.Intent intent = new android.content.Intent();
+					intent.setAction(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+					startActivity(intent);
+				}
+			}
+		}
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -427,6 +462,13 @@ public class MainActivity extends Activity {
 
 		android.hardware.input.InputManager inputManager = (android.hardware.input.InputManager) getSystemService(Context.INPUT_SERVICE);
 		inputManager.registerInputDeviceListener(inputDeviceListener, null);
+
+		new android.os.Handler().postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				checkAllPermissions();
+			}
+		}, 500);
 	}
 
 	private android.hardware.input.InputManager.InputDeviceListener inputDeviceListener = new android.hardware.input.InputManager.InputDeviceListener() {
