@@ -16,10 +16,10 @@ gen/org/echoline/drawterm/R.java: $(shell find res/ -type f)
 	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/aapt package -f -m -M AndroidManifest.xml -I $(ANDROID_HOME)/platforms/android-$(API)/android.jar -S res/ -J gen
 
 bin/classes.dex: obj/org/echoline/drawterm/MainActivity.class obj/org/echoline/drawterm/DrawTermThread.class obj/org/echoline/drawterm/MySurfaceView.class obj/org/echoline/drawterm/DrawtermApplication.class
-	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/d8 --output bin/ obj/org/echoline/drawterm/*.class --lib $(ANDROID_HOME)/platforms/android-$(API)/android.jar
+	$(ANDROID_HOME)/build-tools/$(BUILDTOOLSVER)/d8 --min-api 30 --output bin/ obj/org/echoline/drawterm/*.class --lib $(ANDROID_HOME)/platforms/android-$(API)/android.jar
 
 obj/org/echoline/drawterm/%.class: java/org/echoline/drawterm/%.java
-	$(JAVA_HOME)/bin/javac -d obj/ -classpath $(ANDROID_HOME)/platforms/android-$(API)/android.jar -sourcepath java java/org/echoline/drawterm/$*.java gen/org/echoline/drawterm/R.java
+	$(JAVA_HOME)/bin/javac -source 11 -target 11 -d obj/ -classpath $(ANDROID_HOME)/platforms/android-$(API)/android.jar -sourcepath java java/org/echoline/drawterm/$*.java gen/org/echoline/drawterm/R.java
 
 clean:
 	rm -rf *.a *.o */*.o */*.a bin/* gen/org/echoline/drawterm/* obj/org/echoline/drawterm/*
