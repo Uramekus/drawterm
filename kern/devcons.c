@@ -190,6 +190,8 @@ hang(void)
 	for(;;) sleep(&z, return0, 0);
 }
 
+void (*os_panic_hook)(char *buf) = nil;
+
 void
 panic(char *fmt, ...)
 {
@@ -208,6 +210,10 @@ panic(char *fmt, ...)
 	buf[n] = '\n';
 	spllo();
 	putstrn(buf, n+1);
+
+	if(os_panic_hook)
+		os_panic_hook(buf);
+
 	if(screenputs) hang();
 	setterm(0);
 	exit(1);

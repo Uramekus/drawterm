@@ -33,13 +33,17 @@ struct Oproc
 
 static pthread_key_t prdakey;
 
+extern int panicking;
+
 Proc*
 _getproc(void)
 {
 	void *v;
 
-	if((v = pthread_getspecific(prdakey)) == nil)
+	if((v = pthread_getspecific(prdakey)) == nil){
+		if(panicking) return nil;
 		panic("cannot getspecific");
+	}
 	return v;
 }
 
